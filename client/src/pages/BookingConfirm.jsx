@@ -57,7 +57,7 @@ const BookingConfirm = () => {
       });
       
       const bookingId = createRes.data.data.bookingId;
-      addToast('Seats successfully locked! Authorizing mock payment...', 'success');
+      // addToast('Seats successfully locked! Authorizing mock payment...', 'success');
       
       // Start the local timer using backend expiresIn value
       if (createRes.data.data.expiresIn) {
@@ -76,10 +76,22 @@ const BookingConfirm = () => {
       queryClient.invalidateQueries({ queryKey: ['event'] });
     } catch (err) {
       console.error('[Checkout Error]', err);
-      const msg = err.response?.data?.message || err.message;
+      const data = err.response?.data;
+
+      if (err.response?.status === 410 || data?.code == 'HOLD_EXPIRED'){
+        setSuccessBooking(null);
+        setErrorMessage(null);
+        addToast('Your seat hold has expired. Please select your seats again.')
+        queryClient.invalidateQueries({queryKey: ['event']});
+        queryClient.invalidateQueries({queryKey: ['my-bookings']});
+        navigate('/event/' + eventId,{replace: true});
+        return;
+
+      }
       setErrorMessage(msg);
-      addToast(`Booking failed: ${msg}`, 'error');
-    } finally {
+      addToast('Booking failed: ${msg}', 'error');
+    }
+      finally {
       setIsProcessing(false);
     }
   };
@@ -226,7 +238,7 @@ const BookingConfirm = () => {
       {renderStepper()}
 
       <div className="flex items-center space-x-4">
-        <Link to={`/event/${eventId}`} className="w-10 h-10 flex items-center justify-center bg-white/5 border border-white/10 text-slate-400 hover:text-white rounded-full hover:bg-white/10 transition-colors">
+        <Link to={`/event/` + eventId} className="w-10 h-10 flex items-center justify-center bg-white/5 border border-white/10 text-slate-400 hover:text-white rounded-full hover:bg-white/10 transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <h2 className="text-3xl font-black text-white tracking-tight">Review & Pay</h2>

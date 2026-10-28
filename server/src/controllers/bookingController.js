@@ -175,18 +175,36 @@ export const confirmBooking = async (req, res) => {
       message: 'Event associated with this booking does not exist'
     });
   }
-
+  // await new Promise((r) => setTimeout(r,3000));
   // 1. Verify locks are still active in Redis
+  let holdExpired = false;
   for (const seat of booking.seats) {
-    const lockOwner = await getSeatLockOwner(event._id, seat.section, seat.seatNumber);
-    if (!lockOwner || lockOwner.toString() !== userId.toString()) {
-      return res.status(410).json({
-        success: false,
-        data: null,
-        message: 'Seat locks expired. Please try booking again.'
-      });
+    const lockOwner = await getSeatLockOwner(event._id, seat.selection, seat.seatNumber);
+    console.log('lock check',seat.section,seat.seatNumber,lockOwner,userId.toString());
+    if(!lockOwner || lockOwner.toString()!== userId.toString()){
+      holdExpired = true;
+      break;
     }
   }
+
+  if (holdExpired ){
+    booking.status = 'cancelled';
+    await booking.save();
+
+    for  (const seat of booking.seats){
+      const owner = await getSeatLockOwner(event._id,seat.section,seat.seatNumber);
+      if(!owner){
+        emitSeatReleased(event._id,seat.selection,seat.seatNumber);
+
+      }
+    }
+    return res.status(410).json({
+      success: false,
+      code: 'HOLD_EXPIRED',
+      message: 'Your seat hold has expired. Please select your seats again.',
+    });
+  }
+
 
   // 2. Perform payment transaction (Mocked) and finalize seats
   // Update Event seats availability
