@@ -110,7 +110,7 @@ export const createBooking = async (req, res) => {
         bookingId: booking._id,
         seats: booking.seats,
         totalAmount: booking.totalAmount,
-        expiresIn: 600 // 10 minutes in seconds
+        expiresIn: 1 // 10 minutes in seconds
       },
       message: 'Seats locked. Please confirm booking within 10 minutes.'
     });
@@ -194,7 +194,7 @@ export const confirmBooking = async (req, res) => {
     await booking.save();
 
     for  (const seat of booking.seats){
-      const owner = await getSeatLockOwner(event._id,seat.section,seat.seatNumber);
+      const owner = await getSeatLockOwner(event._id,seat.selection,seat.seatNumber);
       if(!owner){
         emitSeatReleased(event._id,seat.section,seat.seatNumber);
 

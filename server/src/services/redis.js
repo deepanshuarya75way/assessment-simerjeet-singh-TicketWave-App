@@ -97,7 +97,7 @@ export const lockSeats = async (eventId, seats, userId) => {
     const timeout = setTimeout(() => {
       memoryLockStore.delete(lockKey);
       memoryLockTimeouts.delete(lockKey);
-    }, 600 * 1000); // 10 minutes
+    }, 60 * 1000); // 10 minutes
     memoryLockTimeouts.set(lockKey, timeout);
     lockedKeys.push(lockKey);
   }
