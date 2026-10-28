@@ -175,12 +175,14 @@ export const confirmBooking = async (req, res) => {
       message: 'Event associated with this booking does not exist'
     });
   }
-  // await new Promise((r) => setTimeout(r,3000));
+   //await new Promise((r) => setTimeout(r,3000));
+
+
   // 1. Verify locks are still active in Redis
   let holdExpired = false;
   for (const seat of booking.seats) {
-    const lockOwner = await getSeatLockOwner(event._id, seat.selection, seat.seatNumber);
-    console.log('lock check',seat.section,seat.seatNumber,lockOwner,userId.toString());
+    const lockOwner = await getSeatLockOwner(event._id, seat.section, seat.seatNumber);
+    console.log('[DEBUG]lock check',seat.section,seat.seatNumber,lockOwner,userId.toString());
     if(!lockOwner || lockOwner.toString()!== userId.toString()){
       holdExpired = true;
       break;
@@ -194,7 +196,7 @@ export const confirmBooking = async (req, res) => {
     for  (const seat of booking.seats){
       const owner = await getSeatLockOwner(event._id,seat.section,seat.seatNumber);
       if(!owner){
-        emitSeatReleased(event._id,seat.selection,seat.seatNumber);
+        emitSeatReleased(event._id,seat.section,seat.seatNumber);
 
       }
     }
